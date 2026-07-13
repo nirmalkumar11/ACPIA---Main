@@ -1,0 +1,32 @@
+[
+  {
+    "fir_id": "FIR-3391",
+    "location": "Chennai",
+    "suspect": "John",
+    "phone": "9876543210",
+    "address": "12 XYZ Street, Chennai",
+    "offense": "Suspected trafficking",
+    "date_filed": "2025-09-14",
+    "status": "open"
+  },
+  {
+    "fir_id": "FIR-3402",
+    "location": "Chennai",
+    "suspect": "Unknown",
+    "phone": "9123456780",
+    "address": "45 Lake View Road, Chennai",
+    "offense": "Child neglect complaint",
+    "date_filed": "2024-12-01",
+    "status": "closed"
+  },
+  {
+    "fir_id": "FIR-3550",
+    "location": "Coimbatore",
+    "suspect": "Unknown",
+    "phone": "9000011122",
+    "address": "8 Market Street, Coimbatore",
+    "offense": "Cyber exploitation of a minor",
+    "date_filed": "2026-02-20",
+    "status": "open"
+  }
+]

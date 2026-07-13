@@ -1,0 +1,32 @@
+[
+  {
+    "record_id": "MC-2201",
+    "name": "Unknown",
+    "age": 12,
+    "gender": "female",
+    "last_seen_location": "Chennai",
+    "last_seen_date": "2026-07-10",
+    "reported_by": "Family",
+    "status": "missing"
+  },
+  {
+    "record_id": "MC-1987",
+    "name": "Unknown",
+    "age": 10,
+    "gender": "male",
+    "last_seen_location": "Chennai",
+    "last_seen_date": "2025-11-02",
+    "reported_by": "School",
+    "status": "found"
+  },
+  {
+    "record_id": "MC-2050",
+    "name": "Unknown",
+    "age": 13,
+    "gender": "female",
+    "last_seen_location": "Coimbatore",
+    "last_seen_date": "2026-03-18",
+    "reported_by": "Family",
+    "status": "missing"
+  }
+]

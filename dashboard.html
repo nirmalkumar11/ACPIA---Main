@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACPIA — Case Console</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --bg: #10141a;
+    --panel: #171c24;
+    --panel-alt: #1d2430;
+    --border: #2a3341;
+    --text: #e7eaef;
+    --text-muted: #8b94a3;
+    --teal: #3fa98f;
+    --red: #d9503f;
+    --gold: #d8a63d;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+  }
+
+  header{
+    border-bottom:1px solid var(--border);
+    padding:20px 32px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  header .brand{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-weight:600;
+    letter-spacing:0.04em;
+  }
+
+  header .brand span{ color:var(--gold); }
+
+  header .tagline{
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  #status-dot{
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--text-muted);
+    margin-right:6px;
+    vertical-align:middle;
+  }
+  #status-dot.online{ background:var(--teal); box-shadow:0 0 0 3px rgba(63,169,143,0.15); }
+  #status-dot.offline{ background:var(--red); box-shadow:0 0 0 3px rgba(217,80,63,0.15); }
+
+  main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 32px 80px;
+    display:grid;
+    grid-template-columns:360px 1fr;
+    gap:24px;
+  }
+
+  @media (max-width:860px){
+    main{ grid-template-columns:1fr; }
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:20px;
+  }
+
+  .panel + .panel{ margin-top:20px; }
+
+  .panel h2{
+    margin:0 0 14px;
+    font-size:13px;
+  }
+
+  textarea{
+    width:100%;
+    min-height:120px;
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13.5px;
+    padding:12px;
+    resize:vertical;
+  }
+  textarea:focus{ outline:1px solid var(--teal); }
+
+  button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:var(--teal);
+    color:#0c1512;
+    border:none;
+    border-radius:4px;
+    padding:11px 18px;
+    cursor:pointer;
+    margin-top:10px;
+    width:100%;
+  }
+  button:disabled{ background:#3a4453; color:var(--text-muted); cursor:wait; }
+
+  .api-config{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .api-config input{
+    flex:1;
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    padding:7px 9px;
+  }
+
+  /* Pipeline ledger */
+  .ledger-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .ledger-row:last-child{ border-bottom:none; }
+
+  .ledger-dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:#3a4453;
+    flex-shrink:0;
+  }
+  .ledger-row.running .ledger-dot{ background:var(--gold); animation:pulse 1.1s infinite; }
+  .ledger-row.done .ledger-dot{ background:var(--teal); }
+
+  @keyframes pulse{
+    0%,100%{ opacity:1; } 50%{ opacity:0.35; }
+  }
+
+  .ledger-label{ flex:1; font-size:13px; }
+  .ledger-stamp{
+    font-size:10.5px;
+    color:var(--text-muted);
+    opacity:0;
+    transform:rotate(-3deg) scale(0.9);
+  }
+  .ledger-row.done .ledger-stamp{
+    opacity:1;
+    transform:none;
+    color:var(--teal);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  /* Priority badge */
+  .priority-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:5px 12px;
+    border-radius:3px;
+    border:1px solid transparent;
+  }
+  .priority-badge.urgent{ background:rgba(217,80,63,0.15); color:var(--red); border-color:rgba(217,80,63,0.4); }
+  .priority-badge.standard{ background:rgba(63,169,143,0.15); color:var(--teal); border-color:rgba(63,169,143,0.4); }
+
+  .risk-score-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:46px;
+    font-weight:600;
+    line-height:1;
+  }
+
+  .reason-list, .evidence-list{
+    margin:10px 0 0;
+    padding-left:18px;
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .reason-list li, .evidence-list li{ margin-bottom:5px; }
+
+  .summary-box{
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    border-left:3px solid var(--gold);
+    border-radius:4px;
+    padding:16px 18px;
+    font-size:13.5px;
+    line-height:1.6;
+    white-space:pre-wrap;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  .empty-state{
+    color:var(--text-muted);
+    font-size:13px;
+    padding:24px 4px;
+    text-align:center;
+  }
+
+  #graph-wrap svg{ width:100%; height:auto; display:block; }
+
+  .case-history-item{
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .case-history-item:last-child{ border-bottom:none; }
+  .case-history-item:hover{ color:var(--gold); }
+  .case-history-item .meta{ color:var(--text-muted); font-family:'IBM Plex Mono', monospace; font-size:11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">ACPIA<span>::</span>console</div>
+    <div class="tagline">Agentic Child Protection Investigation Assistant — case intake &amp; triage</div>
+  </div>
+  <div class="mono" style="font-size:12px;">
+    <span id="status-dot"></span><span id="status-text">checking backend…</span>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT COLUMN -->
+  <div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px;">Backend</div>
+      <div class="api-config">
+        <input id="api-base" type="text" value="http://localhost:8000" />
+      </div>
+
+      <div class="eyebrow" style="margin-bottom:8px;">New Complaint</div>
+      <textarea id="complaint-text" placeholder="e.g. A 12-year-old girl has been missing for three days from Chennai. Neighbors last saw her near XYZ Street with a man named John."></textarea>
+      <button id="submit-btn">Submit complaint</button>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:4px;">Agent Pipeline</div>
+      <h2 style="margin-top:2px; color:var(--text-muted); font-weight:400; font-size:12px;">Chain of custody — each stage stamps on completion</h2>
+      <div id="ledger">
+        <div class="ledger-row" data-stage="risk">
+          <div class="ledger-dot"></div>
+          <div class="ledger-label">Risk Assessment</div>
+          <div class="ledger-stamp mono">—</div>
+        </div>
+        <div class="ledger-row" data-stage="evidence">
+          <div class="ledger-dot"></div>
+          <div class="ledger-label">Evidence Collection</div>
+          <div class="ledger-stamp mono">—</div>
+        </div>
+        <div class="ledger-row" data-stage="entity">
+          <div class="ledger-dot"></div>
+          <div class="ledger-label">Entity Linking</div>
+          <div class="ledger-stamp mono">—</div>
+        </div>
+        <div class="ledger-row" data-stage="summary">
+          <div class="ledger-dot"></div>
+          <div class="ledger-label">Summarization</div>
+          <div class="ledger-stamp mono">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px;">Case History</div>
+      <div id="history-list">
+        <div class="empty-state">No cases processed yet this session.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div>
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div class="eyebrow">Risk Assessment</div>
+        <div id="priority-badge"></div>
+      </div>
+      <div id="risk-content" class="empty-state">Submit a complaint to see the risk score.</div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:14px;">Evidence Found</div>
+      <div id="evidence-content" class="empty-state">No evidence yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:14px;">Relationship Graph</div>
+      <div id="graph-wrap"><div class="empty-state">No linked entities yet.</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:14px;">Final Investigation Summary</div>
+      <div id="summary-content" class="empty-state">No summary yet.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const apiBaseInput = document.getElementById('api-base');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+const submitBtn = document.getElementById('submit-btn');
+const complaintText = document.getElementById('complaint-text');
+const ledgerRows = document.querySelectorAll('.ledger-row');
+const historyList = document.getElementById('history-list');
+const priorityBadge = document.getElementById('priority-badge');
+const riskContent = document.getElementById('risk-content');
+const evidenceContent = document.getElementById('evidence-content');
+const summaryContent = document.getElementById('summary-content');
+const graphWrap = document.getElementById('graph-wrap');
+
+let caseHistory = [];
+
+function apiBase(){ return apiBaseInput.value.replace(/\/$/, ''); }
+
+async function checkHealth(){
+  try{
+    const res = await fetch(apiBase() + '/api/health');
+    if(res.ok){
+      statusDot.className = 'online';
+      statusText.textContent = 'backend connected';
+    } else {
+      throw new Error('bad status');
+    }
+  }catch(e){
+    statusDot.className = 'offline';
+    statusText.textContent = 'backend unreachable — start api_server.py';
+  }
+}
+checkHealth();
+setInterval(checkHealth, 8000);
+
+function resetLedger(){
+  ledgerRows.forEach(row => {
+    row.className = 'ledger-row';
+    row.querySelector('.ledger-stamp').textContent = '—';
+  });
+}
+
+function stampStage(stage, timeStr){
+  const row = document.querySelector(`.ledger-row[data-stage="${stage}"]`);
+  if(!row) return;
+  row.className = 'ledger-row done';
+  row.querySelector('.ledger-stamp').textContent = 'COMPLETE ' + timeStr;
+}
+
+function runningStage(stage){
+  const row = document.querySelector(`.ledger-row[data-stage="${stage}"]`);
+  if(!row) return;
+  row.className = 'ledger-row running';
+}
+
+function timeNow(){
+  return new Date().toLocaleTimeString('en-GB', { hour12:false });
+}
+
+function renderRisk(risk, priority){
+  if(!risk || Object.keys(risk).length === 0){
+    riskContent.className = 'empty-state';
+    riskContent.textContent = 'No risk assessment returned.';
+    priorityBadge.innerHTML = '';
+    return;
+  }
+  priorityBadge.innerHTML = `<span class="priority-badge ${priority === 'URGENT' ? 'urgent' : 'standard'}">${priority}</span>`;
+  riskContent.className = '';
+  const reasons = (risk.reason || []).map(r => `<li>${escapeHtml(r)}</li>`).join('');
+  riskContent.innerHTML = `
+    <div class="risk-score-num" style="color:${priority === 'URGENT' ? 'var(--red)' : 'var(--teal)'}">${risk.risk_score ?? '—'}<span style="font-size:16px; color:var(--text-muted);">/100</span></div>
+    <div class="mono" style="font-size:12px; color:var(--text-muted); margin-top:6px;">
+      ${escapeHtml(risk.case_type || 'unknown')} · ${escapeHtml(risk.location || 'unknown')} · victim age ${escapeHtml(String(risk.victim_age || 'unknown'))}
+    </div>
+    <ul class="reason-list">${reasons || '<li>No reasons provided.</li>'}</ul>
+  `;
+}
+
+function renderEvidence(evidence){
+  if(!evidence){
+    evidenceContent.className = 'empty-state';
+    evidenceContent.textContent = 'No evidence returned.';
+    return;
+  }
+  evidenceContent.className = '';
+  const similar = (evidence.similar_cases || []);
+  const missing = (evidence.missing_child_records || []);
+  const firs = (evidence.related_firs || []);
+
+  if(similar.length + missing.length + firs.length === 0){
+    evidenceContent.innerHTML = '<div class="empty-state">No matching records found.</div>';
+    return;
+  }
+
+  let html = '';
+  if(similar.length){
+    html += `<div class="eyebrow" style="margin-bottom:6px;">Similar Cases</div><ul class="evidence-list">`;
+    html += similar.map(c => `<li>${escapeHtml(c.case_id || '?')} — ${escapeHtml(c.summary || c.case_type || '')}</li>`).join('');
+    html += `</ul>`;
+  }
+  if(missing.length){
+    html += `<div class="eyebrow" style="margin:14px 0 6px;">Missing Child Records</div><ul class="evidence-list">`;
+    html += missing.map(m => `<li>${escapeHtml(m.record_id || '?')} — age ${escapeHtml(String(m.age || '?'))}, last seen ${escapeHtml(m.last_seen_location || '?')}</li>`).join('');
+    html += `</ul>`;
+  }
+  if(firs.length){
+    html += `<div class="eyebrow" style="margin:14px 0 6px;">Related FIRs</div><ul class="evidence-list">`;
+    html += firs.map(f => `<li>${escapeHtml(f.fir_id || '?')} — ${escapeHtml(f.offense || '?')} (${escapeHtml(f.status || '?')})</li>`).join('');
+    html += `</ul>`;
+  }
+  evidenceContent.innerHTML = html;
+}
+
+function renderGraph(entityLinking){
+  const relationships = (entityLinking && entityLinking.relationships) || [];
+  if(relationships.length === 0){
+    graphWrap.innerHTML = '<div class="empty-state">No entity linked more than one case.</div>';
+    return;
+  }
+
+  const caseIds = [...new Set(relationships.flatMap(r => r.related_cases || []))];
+  const width = 560, height = 260, cx = width/2, cy = height/2, radius = 95;
+
+  const casePos = {};
+  caseIds.forEach((id, i) => {
+    const angle = (i / caseIds.length) * 2 * Math.PI - Math.PI/2;
+    casePos[id] = { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  });
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+  relationships.forEach((rel, i) => {
+    const cases = (rel.related_cases || []).filter(c => casePos[c]);
+    if(cases.length === 0) return;
+    const ex = cases.reduce((s,c) => s + casePos[c].x, 0) / cases.length;
+    const ey = cases.reduce((s,c) => s + casePos[c].y, 0) / cases.length + (i * 4 - relationships.length * 2);
+
+    cases.forEach(c => {
+      svg += `<line x1="${ex}" y1="${ey}" x2="${casePos[c].x}" y2="${casePos[c].y}" stroke="#3a4453" stroke-width="1.5" />`;
+    });
+
+    svg += `<circle cx="${ex}" cy="${ey}" r="7" fill="#10141a" stroke="#d8a63d" stroke-width="2" />`;
+    svg += `<text x="${ex}" y="${ey - 12}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#d8a63d">${escapeHtml(String(rel.entity))}</text>`;
+  });
+
+  caseIds.forEach(id => {
+    const p = casePos[id];
+    svg += `<circle cx="${p.x}" cy="${p.y}" r="9" fill="#171c24" stroke="#3fa98f" stroke-width="2" />`;
+    svg += `<text x="${p.x}" y="${p.y + 22}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#e7eaef">${escapeHtml(id)}</text>`;
+  });
+
+  svg += `</svg>`;
+  graphWrap.innerHTML = svg;
+}
+
+function renderSummary(summary){
+  if(!summary){
+    summaryContent.className = 'empty-state';
+    summaryContent.textContent = 'No summary returned.';
+    return;
+  }
+  summaryContent.className = 'summary-box';
+  summaryContent.textContent = summary;
+}
+
+function renderHistory(){
+  if(caseHistory.length === 0){
+    historyList.innerHTML = '<div class="empty-state">No cases processed yet this session.</div>';
+    return;
+  }
+  historyList.innerHTML = caseHistory.map((c, idx) => `
+    <div class="case-history-item" data-idx="${idx}">
+      <div>${escapeHtml((c.complaint_text || '').slice(0, 60))}${c.complaint_text.length > 60 ? '…' : ''}</div>
+      <div class="meta">CASE #${c.case_number ?? idx+1} · ${escapeHtml(c.priority)} · ${escapeHtml((c.timestamp||'').slice(11,19))}</div>
+    </div>
+  `).join('');
+
+  historyList.querySelectorAll('.case-history-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.getAttribute('data-idx'), 10);
+      displayResult(caseHistory[idx], false);
+    });
+  });
+}
+
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function displayResult(result, animateLedger){
+  if(animateLedger){
+    resetLedger();
+    const t = result.timestamp ? result.timestamp.slice(11,19) : timeNow();
+    ['risk','evidence','entity','summary'].forEach((stage, i) => {
+      setTimeout(() => stampStage(stage, t), i * 220);
+    });
+  } else {
+    const t = result.timestamp ? result.timestamp.slice(11,19) : timeNow();
+    ['risk','evidence','entity','summary'].forEach(stage => stampStage(stage, t));
+  }
+
+  renderRisk(result.risk_assessment, result.priority);
+  renderEvidence(result.evidence_collection);
+  renderGraph(result.entity_linking);
+  renderSummary(result.final_summary);
+}
+
+submitBtn.addEventListener('click', async () => {
+  const text = complaintText.value.trim();
+  if(!text) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Processing…';
+  resetLedger();
+  runningStage('risk');
+
+  try{
+    const res = await fetch(apiBase() + '/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ complaint_text: text })
+    });
+    if(!res.ok) throw new Error('Request failed: ' + res.status);
+    const result = await res.json();
+
+    caseHistory.unshift(result);
+    renderHistory();
+    displayResult(result, true);
+  }catch(err){
+    resetLedger();
+    riskContent.className = 'empty-state';
+    riskContent.textContent = 'Could not reach the backend. Is api_server.py running on ' + apiBase() + '?';
+  }finally{
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit complaint';
+  }
+});
+</script>
+
+</body>
+</html>

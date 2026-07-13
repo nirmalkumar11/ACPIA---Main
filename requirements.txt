@@ -1,0 +1,5 @@
+google-adk>=1.0.0
+pydantic>=2.0.0
+# Optional: only needed if you set NEO4J_URI/NEO4J_USER/NEO4J_PASSWORD
+# to use a real Neo4j instance instead of the built-in in-memory graph.
+neo4j>=5.0.0

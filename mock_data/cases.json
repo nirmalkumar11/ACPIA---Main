@@ -1,0 +1,46 @@
+[
+  {
+    "case_id": "CASE101",
+    "case_type": "missing_child",
+    "location": "Chennai",
+    "victim_age": 11,
+    "suspect": "John",
+    "phone": "9876543210",
+    "address": "12 XYZ Street, Chennai",
+    "summary": "10-year-old reported missing near school premises in 2025.",
+    "status": "unresolved"
+  },
+  {
+    "case_id": "CASE204",
+    "case_type": "neglect",
+    "location": "Chennai",
+    "victim_age": 9,
+    "suspect": "Unknown",
+    "phone": "9123456780",
+    "address": "45 Lake View Road, Chennai",
+    "summary": "Neighbor reported signs of chronic neglect at a residence.",
+    "status": "closed"
+  },
+  {
+    "case_id": "CASE305",
+    "case_type": "trafficking",
+    "location": "Chennai",
+    "victim_age": 13,
+    "suspect": "John",
+    "phone": "9876543210",
+    "address": "12 XYZ Street, Chennai",
+    "summary": "Suspected trafficking attempt reported by an informant.",
+    "status": "under_investigation"
+  },
+  {
+    "case_id": "CASE410",
+    "case_type": "cyber_exploitation",
+    "location": "Coimbatore",
+    "victim_age": 14,
+    "suspect": "Unknown",
+    "phone": "9000011122",
+    "address": "8 Market Street, Coimbatore",
+    "summary": "Minor targeted through social media by unidentified adult.",
+    "status": "under_investigation"
+  }
+]
