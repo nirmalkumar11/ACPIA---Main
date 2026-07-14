@@ -1,2 +1,14 @@
+[project]
+name = "acpia"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "google-adk",
+    "google-genai",
+]
+
 [tool.vercel]
 entrypoint = "api_server:app"
